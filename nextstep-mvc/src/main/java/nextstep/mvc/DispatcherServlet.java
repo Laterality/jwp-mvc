@@ -2,6 +2,7 @@ package nextstep.mvc;
 
 import nextstep.mvc.tobe.ModelAndView;
 import nextstep.mvc.tobe.NoHandlerMatchException;
+import nextstep.mvc.tobe.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,12 +37,19 @@ public class DispatcherServlet extends HttpServlet {
 
         try {
             ModelAndView mav = handleRequest(req, resp);
-            mav.getView().render(mav.getModel(), req, resp);
+            renderViewIfPresent(req, resp, mav);
         } catch (NoHandlerMatchException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            logger.error("Error occurred", e);
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void renderViewIfPresent(HttpServletRequest req, HttpServletResponse resp, ModelAndView mav) throws Exception {
+        View view = mav.getView();
+        if (view != null) {
+            mav.getView().render(mav.getModel(), req, resp);
         }
     }
 
