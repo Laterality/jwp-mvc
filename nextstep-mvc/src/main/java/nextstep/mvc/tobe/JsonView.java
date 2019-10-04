@@ -35,7 +35,7 @@ public class JsonView implements View {
         try {
             return mapper.writeValueAsString(obj);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new ViewRenderException(e, this);
         }
     }
 }

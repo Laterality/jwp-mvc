@@ -58,7 +58,7 @@ public class UserApiController {
             return JsonUtils.toObject(req.getReader().lines().collect(Collectors.joining()), clazz);
         } catch (IOException e) {
             logger.error("Error on parsing json body", e);
-            throw new RuntimeException(e);
+            throw new MessageParseException(e);
         }
     }
 }
