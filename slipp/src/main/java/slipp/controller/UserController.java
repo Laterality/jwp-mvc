@@ -2,6 +2,7 @@ package slipp.controller;
 
 import nextstep.mvc.tobe.JspView;
 import nextstep.mvc.tobe.ModelAndView;
+import nextstep.mvc.tobe.RedirectView;
 import nextstep.web.annotation.Controller;
 import nextstep.web.annotation.RequestMapping;
 import nextstep.web.annotation.RequestMethod;
@@ -25,7 +26,7 @@ public class UserController {
         log.debug("User : {}", user);
 
         DataBase.addUser(user);
-        return new ModelAndView(new JspView("redirect:/"));
+        return new ModelAndView(new RedirectView("/"));
     }
 
     @RequestMapping(value = "/users/profile", method = RequestMethod.GET)
@@ -61,6 +62,6 @@ public class UserController {
                 req.getParameter("email"));
         log.debug("Update User : {}", updateUser);
         user.update(updateUser);
-        return new ModelAndView(new JspView("redirect:/"));
+        return new ModelAndView(new RedirectView("/"));
     }
 }
