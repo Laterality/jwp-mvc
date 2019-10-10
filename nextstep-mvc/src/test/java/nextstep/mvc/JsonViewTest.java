@@ -1,7 +1,5 @@
-package nextstep.mvc.tobe;
+package nextstep.mvc;
 
-import nextstep.mvc.JsonView;
-import nextstep.mvc.View;
 import nextstep.utils.JsonUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
