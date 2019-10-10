@@ -15,12 +15,12 @@ import javax.servlet.http.HttpServletResponse;
 public class UserViewController {
 
     @RequestMapping(value = "/users/form", method = RequestMethod.GET)
-    public ModelAndView signUpForm(HttpServletRequest request, HttpServletResponse response) {
+    public ModelAndView signUpForm() {
         return new ModelAndView(new JspView("/user/form.jsp"));
     }
 
     @RequestMapping(value = "/users/loginForm", method = RequestMethod.GET)
-    public ModelAndView loginForm(HttpServletRequest request, HttpServletResponse response) {
+    public ModelAndView loginForm() {
         return new ModelAndView(new JspView("/user/login.jsp"));
     }
 

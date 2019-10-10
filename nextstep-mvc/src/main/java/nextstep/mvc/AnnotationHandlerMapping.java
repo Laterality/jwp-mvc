@@ -5,6 +5,8 @@ import nextstep.web.annotation.RequestMapping;
 import nextstep.web.annotation.RequestMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
+import org.springframework.core.ParameterNameDiscoverer;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.InvocationTargetException;
@@ -20,9 +22,13 @@ public class AnnotationHandlerMapping implements HandlerMapping {
 
     private RequestMappingScanner requestMappingScanner;
     private Map<HandlerKey, HandlerExecution> handlerExecutions = Maps.newHashMap();
+    private HandlerMethodArgumentResolver argumentResolver;
+    private ParameterNameDiscoverer nameDiscoverer;
 
     public AnnotationHandlerMapping(Object... basePackage) {
         this.requestMappingScanner = new RequestMappingScanner(ComponentScanner.of(basePackage));
+        argumentResolver = HandlerMethodArgumentResolver.getInstance();
+        nameDiscoverer = new LocalVariableTableParameterNameDiscoverer();
     }
 
     @Override
@@ -46,7 +52,10 @@ public class AnnotationHandlerMapping implements HandlerMapping {
     private HandlerExecution executeController(Method method, Object instance) {
         return (request, response) -> {
             try {
-                return (ModelAndView) method.invoke(instance, request, response);
+                return (ModelAndView) method.invoke(instance,
+                        argumentResolver.resolve(nameDiscoverer.getParameterNames(method),
+                                method.getParameterTypes(),
+                                request, response));
             } catch (InvocationTargetException | IllegalAccessException e) {
                 logger.error("Error occurred while handle request", e);
                 throw new HandlerMappingException(e);

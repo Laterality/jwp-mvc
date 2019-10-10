@@ -6,6 +6,10 @@ import nextstep.web.annotation.RequestMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 public class TestUserController {
     private static final Logger logger = LoggerFactory.getLogger(TestUserController.class);
 
@@ -15,6 +19,14 @@ public class TestUserController {
         ModelAndView mav = new ModelAndView();
         mav.addObject("userId", userId);
         mav.addObject("password", password);
+        return mav;
+    }
+
+    @RequestMapping(value = "/users", method = RequestMethod.POST)
+    public ModelAndView int_Integer(int count, Integer number) {
+        ModelAndView mav = new ModelAndView();
+        mav.addObject("count", count);
+        mav.addObject("number", number);
         return mav;
     }
 
@@ -42,5 +54,10 @@ public class TestUserController {
         ModelAndView mav = new ModelAndView();
         mav.addObject("id", id);
         return mav;
+    }
+
+    @RequestMapping(value = "/some/path", method = RequestMethod.GET)
+    public ModelAndView response_request(HttpServletRequest request, HttpServletResponse response) {
+        return new ModelAndView().addObject("userId", request.getParameter("userId"));
     }
 }

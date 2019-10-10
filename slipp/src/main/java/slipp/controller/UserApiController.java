@@ -8,6 +8,8 @@ import nextstep.web.annotation.RequestMapping;
 import nextstep.web.annotation.RequestMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import slipp.controller.exception.MessageParseException;
+import slipp.controller.exception.UserNotFoundException;
 import slipp.domain.User;
 import slipp.dto.UserUpdatedDto;
 import slipp.support.db.DataBase;
@@ -32,8 +34,7 @@ public class UserApiController {
     }
 
     @RequestMapping(value = "/api/users", method = RequestMethod.GET)
-    public ModelAndView find(HttpServletRequest req, HttpServletResponse resp) {
-        String userId = req.getParameter("userId");
+    public ModelAndView find(String userId) {
         User user = DataBase.findUserById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
@@ -41,9 +42,8 @@ public class UserApiController {
     }
 
     @RequestMapping(value = "/api/users", method = RequestMethod.PUT)
-    public ModelAndView update(HttpServletRequest req, HttpServletResponse resp) {
+    public ModelAndView update(HttpServletRequest req, HttpServletResponse resp, String userId) {
         UserUpdatedDto userUpdatedDto = parseBody(req, UserUpdatedDto.class);
-        String userId = req.getParameter("userId");
         User user = DataBase.findUserById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
         user.update(new User(userId, userUpdatedDto.getPassword(), userUpdatedDto.getName(), userUpdatedDto.getEmail()));

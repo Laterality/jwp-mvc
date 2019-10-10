@@ -13,7 +13,7 @@ public class AnnotationHandlerMappingTest {
 
     @BeforeEach
     public void setup() {
-        handlerMapping = new AnnotationHandlerMapping("nextstep.mvc.tobe");
+        handlerMapping = new AnnotationHandlerMapping("nextstep.mvc");
         handlerMapping.initialize();
     }
 

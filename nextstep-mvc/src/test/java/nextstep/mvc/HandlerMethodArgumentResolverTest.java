@@ -1,21 +1,31 @@
 package nextstep.mvc;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 public class HandlerMethodArgumentResolverTest {
     private static final Logger logger = LoggerFactory.getLogger(HandlerMethodArgumentResolverTest.class);
 
     private ParameterNameDiscoverer nameDiscoverer = new LocalVariableTableParameterNameDiscoverer();
+
+    private HandlerMethodArgumentResolver resolver;
+
+    @BeforeEach
+    void setup() {
+        resolver = HandlerMethodArgumentResolver.getInstance();
+    }
 
     @Test
     void string() throws Exception {
@@ -28,16 +38,31 @@ public class HandlerMethodArgumentResolverTest {
         Class clazz = TestUserController.class;
         Method method = getMethod("create_string", clazz.getDeclaredMethods());
         String[] parameterNames = nameDiscoverer.getParameterNames(method);
-        Object[] values = new Object[parameterNames.length];
-        for (int i = 0; i < parameterNames.length; i++) {
-            String parameterName = parameterNames[i];
-            logger.debug("parameter : {}", parameterName);
-            values[i] = request.getParameter(parameterName);
-        }
+        Object[] values = resolver.resolve(parameterNames, method.getParameterTypes(), request, new MockHttpServletResponse());
 
         ModelAndView mav = (ModelAndView) method.invoke(clazz.newInstance(), values);
         assertThat(mav.getObject("userId")).isEqualTo(userId);
         assertThat(mav.getObject("password")).isEqualTo(password);
+    }
+
+    @Test
+    void int_Integer() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        int count = 2;
+        Integer number = 10;
+        request.addParameter("count", String.valueOf(count));
+        request.addParameter("number", String.valueOf(number));
+
+        Class clazz = TestUserController.class;
+        Method method = getMethod("int_Integer", clazz.getDeclaredMethods());
+        String[] parameterNames = nameDiscoverer.getParameterNames(method);
+        Object[] values = resolver.resolve(parameterNames, method.getParameterTypes(), request, new MockHttpServletResponse());
+
+        assertDoesNotThrow(() -> {
+            ModelAndView mav = (ModelAndView) method.invoke(clazz.newInstance(), values);
+            assertThat(mav.getObject("count")).isEqualTo(count);
+            assertThat(mav.getObject("number")).isEqualTo(number);
+        });
     }
 
     private Method getMethod(String name, Method[] methods) {
@@ -45,5 +70,25 @@ public class HandlerMethodArgumentResolverTest {
                 .filter(method -> method.getName().equals(name))
                 .findFirst()
                 .get();
+    }
+
+    @Test
+    void response_request() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        String userId = "javajigi";
+        request.addParameter("userId", userId);
+
+        Class clazz = TestUserController.class;
+        Method method = getMethod("response_request", clazz.getDeclaredMethods());
+        String[] parameterNames = nameDiscoverer.getParameterNames(method);
+        Class<?>[] parameterTypes = method.getParameterTypes();
+
+        Object[] params = resolver.resolve(parameterNames, parameterTypes, request,response);
+
+        assertDoesNotThrow(() -> {
+            ModelAndView mav = (ModelAndView) method.invoke(clazz.newInstance(), params);
+            assertThat(mav.getObject("userId")).isEqualTo(userId);
+        });
     }
 }
