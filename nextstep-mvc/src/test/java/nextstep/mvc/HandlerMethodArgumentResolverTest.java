@@ -1,5 +1,6 @@
 package nextstep.mvc;
 
+import nextstep.web.annotation.RequestMapping;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -38,7 +39,8 @@ public class HandlerMethodArgumentResolverTest {
         Class clazz = TestUserController.class;
         Method method = getMethod("create_string", clazz.getDeclaredMethods());
         String[] parameterNames = nameDiscoverer.getParameterNames(method);
-        Object[] values = resolver.resolve(parameterNames, method.getParameterTypes(), request, new MockHttpServletResponse());
+        Object[] values = resolver.resolve("", parameterNames, method.getParameters(), request,
+                new MockHttpServletResponse());
 
         ModelAndView mav = (ModelAndView) method.invoke(clazz.newInstance(), values);
         assertThat(mav.getObject("userId")).isEqualTo(userId);
@@ -56,7 +58,8 @@ public class HandlerMethodArgumentResolverTest {
         Class clazz = TestUserController.class;
         Method method = getMethod("int_Integer", clazz.getDeclaredMethods());
         String[] parameterNames = nameDiscoverer.getParameterNames(method);
-        Object[] values = resolver.resolve(parameterNames, method.getParameterTypes(), request, new MockHttpServletResponse());
+        Object[] values = resolver.resolve("", parameterNames, method.getParameters(), request,
+                new MockHttpServletResponse());
 
         assertDoesNotThrow(() -> {
             ModelAndView mav = (ModelAndView) method.invoke(clazz.newInstance(), values);
@@ -82,13 +85,32 @@ public class HandlerMethodArgumentResolverTest {
         Class clazz = TestUserController.class;
         Method method = getMethod("response_request", clazz.getDeclaredMethods());
         String[] parameterNames = nameDiscoverer.getParameterNames(method);
-        Class<?>[] parameterTypes = method.getParameterTypes();
 
-        Object[] params = resolver.resolve(parameterNames, parameterTypes, request,response);
+        Object[] params = resolver.resolve("", parameterNames, method.getParameters(), request, response);
 
         assertDoesNotThrow(() -> {
             ModelAndView mav = (ModelAndView) method.invoke(clazz.newInstance(), params);
             assertThat(mav.getObject("userId")).isEqualTo(userId);
+        });
+    }
+
+    @Test
+    void path_variable() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        long id = 33L;
+        request.setRequestURI("/users/" + id);
+
+        Class clazz = TestUserController.class;
+        Method method = getMethod("show_pathvariable", clazz.getDeclaredMethods());
+        String[] parameterNames = nameDiscoverer.getParameterNames(method);
+
+        Object[] params = resolver.resolve(method.getAnnotation(RequestMapping.class).value(),
+                parameterNames, method.getParameters(), request, response);
+
+        assertDoesNotThrow(() -> {
+            ModelAndView mav = (ModelAndView) method.invoke(clazz.newInstance(), params);
+            assertThat(mav.getObject("id")).isEqualTo(id);
         });
     }
 }

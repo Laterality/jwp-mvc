@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.web.util.pattern.PathPatternParser;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.InvocationTargetException;
@@ -39,22 +40,26 @@ public class AnnotationHandlerMapping implements HandlerMapping {
     }
 
     private void mapControllerMethod(Method method) {
+        PathPatternParser pathPatternParser = new PathPatternParser();
         RequestMapping mapping = method.getAnnotation(RequestMapping.class);
         RequestMethod[] methods = mapping.method();
         if (mapping.method().length == 0) {
             methods = RequestMethod.values();
         }
         Arrays.stream(methods)
-                .map(requestMethod -> new HandlerKey(mapping.value(), requestMethod))
+                .map(requestMethod -> new HandlerKey(pathPatternParser.parse(mapping.value()), requestMethod))
                 .forEach(key -> handlerExecutions.put(key, executeController(method, Instances.getFromMethod(method))));
     }
 
     private HandlerExecution executeController(Method method, Object instance) {
         return (request, response) -> {
             try {
+                RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
                 return (ModelAndView) method.invoke(instance,
-                        argumentResolver.resolve(nameDiscoverer.getParameterNames(method),
-                                method.getParameterTypes(),
+                        argumentResolver.resolve(
+                                requestMapping.value(),
+                                nameDiscoverer.getParameterNames(method),
+                                method.getParameters(),
                                 request, response));
             } catch (InvocationTargetException | IllegalAccessException e) {
                 logger.error("Error occurred while handle request", e);
@@ -65,6 +70,9 @@ public class AnnotationHandlerMapping implements HandlerMapping {
 
     @Override
     public Optional<HandlerExecution> getHandler(HttpServletRequest request) {
-        return Optional.ofNullable(handlerExecutions.get(new HandlerKey(request.getRequestURI(), RequestMethod.valueOf(request.getMethod()))));
+        return handlerExecutions.entrySet().stream()
+                .filter(entry -> entry.getKey().matchPattern(request.getRequestURI()))
+                .map(Map.Entry::getValue)
+                .findFirst();
     }
 }

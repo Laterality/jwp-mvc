@@ -1,19 +1,25 @@
 package nextstep.mvc;
 
 import nextstep.web.annotation.RequestMethod;
+import org.springframework.http.server.PathContainer;
+import org.springframework.web.util.pattern.PathPattern;
 
 public class HandlerKey {
-    private String url;
+    private PathPattern pathPattern;
     private RequestMethod requestMethod;
 
-    public HandlerKey(String url, RequestMethod requestMethod) {
-        this.url = url;
+    public HandlerKey(PathPattern pathPattern, RequestMethod requestMethod) {
+        this.pathPattern = pathPattern;
         this.requestMethod = requestMethod;
+    }
+
+    public boolean matchPattern(String path) {
+        return pathPattern.matches(PathContainer.parsePath(path));
     }
 
     @Override
     public String toString() {
-        return "HandlerKey [url=" + url + ", requestMethod=" + requestMethod + "]";
+        return "HandlerKey [url=" + pathPattern + ", requestMethod=" + requestMethod + "]";
     }
 
     @Override
@@ -21,7 +27,7 @@ public class HandlerKey {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((requestMethod == null) ? 0 : requestMethod.hashCode());
-        result = prime * result + ((url == null) ? 0 : url.hashCode());
+        result = prime * result + ((pathPattern == null) ? 0 : pathPattern.hashCode());
         return result;
     }
 
@@ -36,8 +42,8 @@ public class HandlerKey {
         HandlerKey other = (HandlerKey) obj;
         if (requestMethod != other.requestMethod)
             return false;
-        if (url == null) {
-            return other.url == null;
-        } else return url.equals(other.url);
+        if (pathPattern == null) {
+            return other.pathPattern == null;
+        } else return pathPattern.equals(other.pathPattern);
     }
 }
